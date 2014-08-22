@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require "readline"
 
 def factor a
@@ -42,7 +40,7 @@ end
 # -> "2^3 * 3 * 5^6 * 11^3"
 def pretty a
   a.reduce "" do |s, x|
-    s + ((s == "")?"":" * ") +
+    s + (s == "" ? "" : " * ") +
       if x[1] == 1
         x[0].to_s
       else
@@ -60,40 +58,22 @@ def inp(x, *a)
   return false
 end
 
-puts "Enter integers separated by \"+\""
-puts "Type \"exit\" to quit."
-puts
-
-loop do
-  begin
-    input = Readline.readline("> ", true).gsub(/\s/, "")
-  rescue Exception => e
-    # catch Ctrl+C
-    puts (e.inspect != "Interrupt" ? "Error: " : "") + e.message
-    break
+def factor_all input
+  nums = input.split("+").map do |n|
+    # catch inputs like "test" and "23532 - 2353"
+    raise "Invalid input #{input.inspect}" if n !~ /^[0-9]+$/
+    n.to_i
   end
-  break if inp(input, "exit", "quit")
-  begin
-    nums = input.split("+").map do |n|
-      # catch inputs like "test" and "23532 - 2353"
-      raise "Invalid input #{input.inspect}" if n !~ /^[0-9]+$/
-      n.to_i
-    end
-    if nums.length == 1
-      puts pretty factor nums[0]
+  if nums.length == 1
+    pretty factor nums[0]
+  else
+    com = common nums
+    if com == 1
+      puts nums.map {|n| pretty factor n}.join(" + ")
     else
-      com = common nums
-      if com == 1
-        puts nums.map {|n| pretty factor n}.join(" + ")
-      else
-        div = nums.map {|n| n/com}
-        puts "#{com.to_s} * (#{div.join(" + ")})"
-        puts "#{pretty factor com} * (" + div.map {|n| pretty factor n}.join(" + ") + ")"
-      end
+      div = nums.map {|n| n/com}
+      "#{com.to_s} * (#{div.join(" + ")})\n" +
+      "#{pretty factor com} * (" + div.map {|n| pretty factor n}.join(" + ") + ")"
     end
-  rescue Exception => e
-    # on interrupt, e.message = "", so need to use e.inspect
-    mess = e.inspect === "Interrupt" ? e.inspect : e.message
-    puts "Error: #{mess}"
   end
 end

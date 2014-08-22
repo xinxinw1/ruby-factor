@@ -5,9 +5,9 @@ Uses GNU coreutils factor and readline to quickly and easily factor large number
 ## How to run
 
 1. Go to https://github.com/xinxinw1/ruby-factor/releases and download the latest release.
-2. Extract `factor.rb` to any directory.
+2. Extract all files to any directory.
 3. Open a shell and cd to that directory.
-4. Run `$ ruby factor.rb`
+4. Run `$ ruby repl.rb`
 
 ## Instructions
 
