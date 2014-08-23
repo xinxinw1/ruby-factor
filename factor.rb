@@ -109,7 +109,9 @@ def factor_all input
     raise "Invalid input #{input.inspect}" if n !~ /^[0-9]+$/
     n.to_i
   end
-  if nums.length == 1
+  if nums.length == 0
+    raise "Invalid input \"\""
+  elsif nums.length == 1
     pretty factor nums[0]
   else
     com = common nums
