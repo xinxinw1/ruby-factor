@@ -1,10 +1,55 @@
 require "readline"
+require "timeout"
+
+# https://www.ruby-forum.com/topic/104941
+def run(s, sec = 10)
+  begin
+    pipe = IO.popen(s, 'r')
+  rescue Exception => e
+    mess = e.inspect === "Interrupt" ? e.inspect : e.message
+    raise "Failed to start process: #{mess}"
+  end
+  
+  begin
+    Timeout::timeout(sec) do
+      a = Process.waitpid2(pipe.pid)
+      if a[1].exitstatus != 0
+        raise "Process exited with status #{a[1].exitstatus.inspect}"
+      end
+    end
+  rescue Timeout::Error, Interrupt => e
+    # rescue Interrupt to make sure process is killed
+    begin
+      Process.kill('KILL', pipe.pid)
+      Timeout::timeout(2) do
+        pipe.close
+      end
+    rescue Exception => e2
+      # if this was e instead of e2, it shadows the previous e
+      # http://stackoverflow.com/questions/22310012/how-is-stderr-puts-different-from-puts-in-ruby
+      if e2.class == Timeout::Error
+        mess = "Timeout"
+      elsif e2.class == Interrupt
+        mess = "Interrupt"
+      else
+        mess = e2.message
+      end
+      STDERR.puts "Warning: Failed to kill process: #{mess}"
+    end
+    raise e
+  end
+  
+  out = pipe.gets(nil)
+  pipe.close
+  out
+end
 
 def factor a
   # use GNU coreutils factor which is much faster than ruby prime_division
   raise "Invalid input #{a.inspect}" if !(a.is_a? Integer) || a <= 0
   return [[1, 1]] if a === 1
-  arr = `factor #{a}`.chomp.split(" ")
+  str = run("factor #{a}", 5)
+  arr = str.chomp.split(" ")
   arr = arr.slice(1, arr.length).map(&:to_i)
   cnts arr
 end
@@ -69,7 +114,7 @@ def factor_all input
   else
     com = common nums
     if com == 1
-      puts nums.map {|n| pretty factor n}.join(" + ")
+      nums.map {|n| pretty factor n}.join(" + ")
     else
       div = nums.map {|n| n/com}
       "#{com.to_s} * (#{div.join(" + ")})\n" +

@@ -19,7 +19,15 @@ loop do
     puts factor_all input
   rescue Exception => e
     # on interrupt, e.message = "", so need to use e.inspect
-    mess = e.inspect === "Interrupt" ? e.inspect : e.message
+    if e.class == Timeout::Error
+      mess = "Timeout"
+    elsif e.class == Interrupt
+      mess = "Interrupt"
+    else
+      mess = e.message
+    end
     puts "Error: #{mess}"
+    #puts "Error: #{e.class}: #{mess}"
+    #puts e.backtrace
   end
 end
